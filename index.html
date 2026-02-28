@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AI Actor Scripts</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    h1 { color: #333; }
+    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background-color: #f2f2f2; }
+    button { margin-right: 5px; }
+    pre { background: #f9f9f9; padding: 10px; overflow-x: auto; }
+  </style>
+</head>
+<body>
+  <h1>AI Actor Scripts</h1>
+  <div id="error" style="color:red;"></div>
+  <table>
+    <thead>
+      <tr>
+        <th>Script Name</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="scripts-table">
+      <!-- Scripts will be populated here -->
+    </tbody>
+  </table>
+
+  <script>
+    const tableBody = document.getElementById("scripts-table");
+    const errorDiv = document.getElementById("error");
+
+    async function loadScripts() {
+      try {
+        const res = await fetch("http://127.0.0.1:8000/scene_summary");
+        if (!res.ok) throw new Error("Failed to fetch scripts from API");
+        const summary = await res.json();
+
+        for (const [script, count] of Object.entries(summary)) {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${script}</td>
+            <td>
+              <button onclick="viewAll('${script}')">View All Scenes</button>
+              ${[...Array(Math.min(count, 5)).keys()].map(i =>
+                `<button onclick="viewScene('${script}', ${i+1})">Scene ${i+1}</button>`
+              ).join(' ')}
+              <div id="output-${script}"></div>
+            </td>
+          `;
+          tableBody.appendChild(row);
+        }
+      } catch (err) {
+        errorDiv.textContent = `Error loading scripts: ${err.message}`;
+      }
+    }
+
+    async function viewAll(script) {
+      const res = await fetch(`http://127.0.0.1:8000/scene/${encodeURIComponent(script)}`);
+      const scenes = await res.json();
+      const out = document.getElementById(`output-${script}`);
+      out.innerHTML = `<pre>${JSON.stringify(scenes, null, 2)}</pre>`;
+    }
+
+    async function viewScene(script, sceneNumber) {
+      const res = await fetch(`http://127.0.0.1:8000/scene/${encodeURIComponent(script)}/${sceneNumber}`);
+      const scene = await res.json();
+      const out = document.getElementById(`output-${script}`);
+      out.innerHTML = `<pre>${JSON.stringify(scene, null, 2)}</pre>`;
+    }
+
+    loadScripts();
+  </script>
+</body>
+</html>
