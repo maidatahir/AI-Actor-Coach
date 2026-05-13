@@ -246,10 +246,11 @@ function ContextBlockUI({ block, ttsPlaying, isLast, onNext }: Readonly<{
 
 // ─── Speech Block UI ──────────────────────────────────────────────────────────
 
-function SpeechBlockUI({ block, emotionData, lineEmotionList, isLast, isRecording, recorded, transcript, onStartRecording, onStopRecording, onNext }: Readonly<{
+function SpeechBlockUI({ block, emotionData, lineEmotionList, liveEmotion, isLast, isRecording, recorded, transcript, onStartRecording, onStopRecording, onNext }: Readonly<{
   block:            SpeechBlock
   emotionData:      EmotionData | undefined
   lineEmotionList:  (LineEmotion | null)[] | undefined
+  liveEmotion:      EmotionData | null
   isLast:           boolean
   isRecording:      boolean
   recorded:         boolean
@@ -703,6 +704,7 @@ export default function GuidedSession({
           block={currentBlock}
           emotionData={emotions[blockIndex]}
           lineEmotionList={lineEmotions[blockIndex]}
+          liveEmotion={liveEmotion}
           isLast={isLast}
           isRecording={isRecording}
           recorded={recorded}
