@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
@@ -30,7 +29,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Plus, Calendar, User, BookOpen, Clock, CheckCircle, AlertCircle, Hourglass } from "lucide-react"
+import { Plus, Calendar, User, BookOpen, Clock, CheckCircle, AlertCircle, Hourglass, Search } from "lucide-react"
 
 const assignments = [
   {
@@ -79,58 +78,59 @@ const statusConfig = {
   completed: {
     label: "Completed",
     icon: CheckCircle,
-    className: "bg-green-500/10 text-green-600 border-green-500/20",
+    className: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
   },
   "in-progress": {
     label: "In Progress",
     icon: Hourglass,
-    className: "bg-primary/10 text-primary border-primary/20",
+    className: "bg-blue-500/10 text-blue-400 border-blue-500/20",
   },
   pending: {
     label: "Pending",
     icon: Clock,
-    className: "bg-muted text-muted-foreground border-border",
+    className: "bg-white/5 text-white/40 border-white/10",
   },
   overdue: {
     label: "Overdue",
     icon: AlertCircle,
-    className: "bg-destructive/10 text-destructive border-destructive/20",
+    className: "bg-red-500/10 text-red-400 border-red-500/20",
   },
 }
 
 export default function AssignmentsPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Assignments</h1>
-          <p className="text-muted-foreground">Manage and track your practice assignments</p>
+          <h1 className="text-2xl font-bold text-white">Assignments</h1>
+          <p className="text-white/50">Manage and track your practice assignments</p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white rounded-full shadow-lg shadow-purple-500/25">
               <Plus className="w-4 h-4 mr-2" />
               Assign Scene
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="bg-[#0f172a] border-white/10 text-white">
             <DialogHeader>
               <DialogTitle>Create New Assignment</DialogTitle>
-              <DialogDescription>
+              <DialogDescription className="text-white/50">
                 Assign a scene to a student for practice
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="script">Script</Label>
+                <Label htmlFor="script" className="text-white/70">Script</Label>
                 <Select>
-                  <SelectTrigger>
+                  <SelectTrigger className="bg-white/5 border-white/10 text-white">
                     <SelectValue placeholder="Select a script" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-[#1e293b] border-white/10 text-white">
                     <SelectItem value="hamlet">Hamlet</SelectItem>
                     <SelectItem value="romeo">Romeo and Juliet</SelectItem>
                     <SelectItem value="macbeth">Macbeth</SelectItem>
@@ -139,12 +139,12 @@ export default function AssignmentsPage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="scene">Scene</Label>
+                <Label htmlFor="scene" className="text-white/70">Scene</Label>
                 <Select>
-                  <SelectTrigger>
+                  <SelectTrigger className="bg-white/5 border-white/10 text-white">
                     <SelectValue placeholder="Select a scene" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-[#1e293b] border-white/10 text-white">
                     <SelectItem value="scene1">Act I, Scene 1</SelectItem>
                     <SelectItem value="scene2">Act I, Scene 2</SelectItem>
                     <SelectItem value="scene3">Act II, Scene 1</SelectItem>
@@ -153,12 +153,12 @@ export default function AssignmentsPage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="student">Student</Label>
+                <Label htmlFor="student" className="text-white/70">Student</Label>
                 <Select>
-                  <SelectTrigger>
+                  <SelectTrigger className="bg-white/5 border-white/10 text-white">
                     <SelectValue placeholder="Select a student" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-[#1e293b] border-white/10 text-white">
                     <SelectItem value="john">John Doe</SelectItem>
                     <SelectItem value="sarah">Sarah Mitchell</SelectItem>
                     <SelectItem value="michael">Michael Chen</SelectItem>
@@ -167,15 +167,15 @@ export default function AssignmentsPage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="deadline">Deadline</Label>
-                <Input type="date" id="deadline" />
+                <Label htmlFor="deadline" className="text-white/70">Deadline</Label>
+                <Input type="date" id="deadline" className="bg-white/5 border-white/10 text-white" />
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+              <Button variant="outline" onClick={() => setIsDialogOpen(false)} className="border-white/10 text-white hover:bg-white/5">
                 Cancel
               </Button>
-              <Button onClick={() => setIsDialogOpen(false)}>
+              <Button onClick={() => setIsDialogOpen(false)} className="bg-purple-600 hover:bg-purple-500 text-white">
                 Create Assignment
               </Button>
             </DialogFooter>
@@ -185,129 +185,88 @@ export default function AssignmentsPage() {
 
       {/* Stats Cards */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-6">
+        {[
+          { label: "Total Assignments", value: assignments.length, icon: BookOpen, color: "text-purple-400", bg: "bg-purple-500/10" },
+          { label: "Completed", value: assignments.filter((a) => a.status === "completed").length, icon: CheckCircle, color: "text-emerald-400", bg: "bg-emerald-500/10" },
+          { label: "In Progress", value: assignments.filter((a) => a.status === "in-progress").length, icon: Hourglass, color: "text-blue-400", bg: "bg-blue-500/10" },
+          { label: "Overdue", value: assignments.filter((a) => a.status === "overdue").length, icon: AlertCircle, color: "text-red-400", bg: "bg-red-500/10" },
+        ].map((stat, i) => (
+          <div key={i} className="p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10">
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-primary/10">
-                <BookOpen className="w-5 h-5 text-primary" />
+              <div className={`p-3 rounded-xl ${stat.bg}`}>
+                <stat.icon className={`w-5 h-5 ${stat.color}`} />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Total Assignments</p>
-                <p className="text-2xl font-bold text-foreground">{assignments.length}</p>
+                <p className="text-sm text-white/50">{stat.label}</p>
+                <p className="text-2xl font-bold text-white">{stat.value}</p>
               </div>
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-green-500/10">
-                <CheckCircle className="w-5 h-5 text-green-600" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Completed</p>
-                <p className="text-2xl font-bold text-foreground">
-                  {assignments.filter((a) => a.status === "completed").length}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-accent/10">
-                <Hourglass className="w-5 h-5 text-accent" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">In Progress</p>
-                <p className="text-2xl font-bold text-foreground">
-                  {assignments.filter((a) => a.status === "in-progress").length}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-destructive/10">
-                <AlertCircle className="w-5 h-5 text-destructive" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Overdue</p>
-                <p className="text-2xl font-bold text-foreground">
-                  {assignments.filter((a) => a.status === "overdue").length}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+        ))}
       </div>
 
-      {/* Assignments Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>All Assignments</CardTitle>
-          <CardDescription>View and manage all practice assignments</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>
-                    <div className="flex items-center gap-2">
-                      <BookOpen className="w-4 h-4" />
-                      Script
-                    </div>
-                  </TableHead>
-                  <TableHead>Scene</TableHead>
-                  <TableHead>
-                    <div className="flex items-center gap-2">
-                      <User className="w-4 h-4" />
-                      Student
-                    </div>
-                  </TableHead>
-                  <TableHead>
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4" />
-                      Deadline
-                    </div>
-                  </TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {assignments.map((assignment) => {
-                  const status = statusConfig[assignment.status as keyof typeof statusConfig]
-                  const StatusIcon = status.icon
-                  return (
-                    <TableRow key={assignment.id}>
-                      <TableCell className="font-medium">{assignment.script}</TableCell>
-                      <TableCell>{assignment.scene}</TableCell>
-                      <TableCell>{assignment.student}</TableCell>
-                      <TableCell>{assignment.deadline}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className={status.className}>
-                          <StatusIcon className="w-3 h-3 mr-1" />
-                          {status.label}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="sm">
-                          View
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  )
-                })}
-              </TableBody>
-            </Table>
+      {/* Filter & Table Area */}
+      <div className="p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 overflow-hidden">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <h2 className="text-lg font-semibold text-white">Recent Assignments</h2>
+          <div className="relative max-w-sm w-full">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+            <Input 
+              placeholder="Search by student or script..." 
+              className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-white/30 rounded-xl"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
-        </CardContent>
-      </Card>
+        </div>
+        
+        <div className="overflow-x-auto -mx-6 px-6">
+          <Table>
+            <TableHeader>
+              <TableRow className="border-white/5 hover:bg-transparent">
+                <TableHead className="text-white/40 font-medium">Script</TableHead>
+                <TableHead className="text-white/40 font-medium">Scene</TableHead>
+                <TableHead className="text-white/40 font-medium">Student</TableHead>
+                <TableHead className="text-white/40 font-medium">Deadline</TableHead>
+                <TableHead className="text-white/40 font-medium">Status</TableHead>
+                <TableHead className="text-white/40 font-medium text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {assignments.map((assignment) => {
+                const status = statusConfig[assignment.status as keyof typeof statusConfig]
+                const StatusIcon = status.icon
+                return (
+                  <TableRow key={assignment.id} className="border-white/5 hover:bg-white/5 transition-colors">
+                    <TableCell className="font-medium text-white">{assignment.script}</TableCell>
+                    <TableCell className="text-white/60">{assignment.scene}</TableCell>
+                    <TableCell className="text-white/60">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-500/30 to-blue-500/30 flex items-center justify-center text-[10px] text-white">
+                          {assignment.student.split(' ').map(n => n[0]).join('')}
+                        </div>
+                        {assignment.student}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-white/60">{assignment.deadline}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className={`${status.className} rounded-full font-normal border`}>
+                        <StatusIcon className="w-3 h-3 mr-1" />
+                        {status.label}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="ghost" size="sm" className="text-purple-400 hover:text-purple-300 hover:bg-purple-400/10 rounded-full">
+                        View
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                )
+              })}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
     </div>
   )
 }

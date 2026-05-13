@@ -8,27 +8,30 @@ import { preloadedScripts } from "@/lib/scripts-context"
 export const dynamic = "force-dynamic"
 
 export default async function ScriptLibraryPage() {
-  await dbConnect()
-  const session = await getSession()
-
-  // Fetch from MongoDB, but filter dynamically on the client for now
-  // Added standard plain object conversion for passing to Client Components
   let userScripts: any[] = []
 
-  if (session?.userId) {
-    const dbScripts = await Script.find({}).lean()
-    userScripts = JSON.parse(JSON.stringify(
-      dbScripts.map((s: any) => ({
-        id: s._id.toString(),
-        _id: s._id.toString(),
-        title: s.title ?? "Untitled",
-        author: s.author ?? "Unknown",
-        scenes: s.totalScenes ?? (Array.isArray(s.scenes) ? s.scenes.length : 0),
-        genre: s.genre ?? "Custom",
-        difficulty: s.difficulty ?? "Custom",
-        isUserUploaded: true,
-      }))
-    ))
+  try {
+    await dbConnect()
+    const session = await getSession()
+
+    if (session?.userId) {
+      const dbScripts = await Script.find({}).lean()
+      userScripts = JSON.parse(JSON.stringify(
+        dbScripts.map((s: any) => ({
+          id: s._id.toString(),
+          _id: s._id.toString(),
+          title: s.title ?? "Untitled",
+          author: s.author ?? "Unknown",
+          scenes: s.totalScenes ?? (Array.isArray(s.scenes) ? s.scenes.length : 0),
+          genre: s.genre ?? "Custom",
+          difficulty: s.difficulty ?? "Custom",
+          isUserUploaded: true,
+        }))
+      ))
+    }
+  } catch (error) {
+    console.error("Script library database error:", error)
+    // Page will still render with preloaded scripts
   }
 
   // Preloaded library can be mocked here until standard libraries are seeded in DB
