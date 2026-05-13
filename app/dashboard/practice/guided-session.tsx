@@ -101,17 +101,23 @@ function parseRecognitionResult(event: any): string {
 }
 
 async function fetchEmotionData(text: string): Promise<EmotionData | null> {
+  if (!text || text.trim().length < 4) return null
   try {
     const res = await fetch("/api/emotion", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ text }),
     })
-    if (!res.ok) return null
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: "Unknown" }))
+      console.error("[GuidedSession] Emotion fetch failed:", err)
+      return null
+    }
     const data = await res.json()
     if (!data?.emotion) return null
     return { top: data.emotion, all: data.all ?? { [data.emotion]: data.score ?? 1 } }
-  } catch {
+  } catch (err) {
+    console.error("[GuidedSession] Emotion fetch error:", err)
     return null
   }
 }
@@ -261,17 +267,27 @@ function SpeechBlockUI({ block, emotionData, lineEmotionList, isLast, isRecordin
           <p className="text-[10px] font-bold uppercase tracking-widest text-purple-400/70 mb-1">Your turn to speak</p>
           <p className="text-2xl font-bold text-white">{block.speaker}</p>
         </div>
-        {emotionData
-          ? <EmotionBadge emotion={emotionData.top} />
-          : <DetectingBadge />
+        {liveEmotion 
+          ? <div className="flex flex-col items-end gap-1">
+              <p className="text-[10px] text-white/30 uppercase font-bold">Live</p>
+              <EmotionBadge emotion={liveEmotion.top} />
+            </div>
+          : emotionData
+            ? <div className="flex flex-col items-end gap-1">
+                <p className="text-[10px] text-white/30 uppercase font-bold">Target</p>
+                <EmotionBadge emotion={emotionData.top} />
+              </div>
+            : <DetectingBadge />
         }
       </div>
 
       {/* Emotion breakdown */}
-      {emotionData ? (
+      {(liveEmotion ?? emotionData) ? (
         <div className="p-3 rounded-xl bg-black/20 border border-white/5">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-white/30 mb-2">Emotion Breakdown</p>
-          <EmotionBreakdown data={emotionData} />
+          <p className="text-[10px] font-bold uppercase tracking-widest text-white/30 mb-2">
+            {(liveEmotion) ? "Live Performance Analysis" : "Script Analysis (Target)"}
+          </p>
+          <EmotionBreakdown data={(liveEmotion ?? emotionData) as EmotionData} />
         </div>
       ) : (
         <div className="p-3 rounded-xl bg-black/20 border border-white/5 animate-pulse">
@@ -528,6 +544,7 @@ export default function GuidedSession({
   const [recorded,    setRecorded]    = useState(false)
   const [emotions,     setEmotions]     = useState<Record<number, EmotionData>>({})
   const [lineEmotions, setLineEmotions] = useState<Record<number, (LineEmotion | null)[]>>({})
+  const [liveEmotion,  setLiveEmotion]  = useState<EmotionData | null>(null)
 
   const recognitionRef        = useRef<any>(null)
   const loadedLineBlocksRef   = useRef<Set<number>>(new Set())
@@ -595,7 +612,18 @@ export default function GuidedSession({
     if (phase !== "running" || currentBlock?.type !== "speech") return
     setTranscript("")
     setRecorded(false)
+    setLiveEmotion(null)
   }, [blockIndex, phase])
+
+  // Live emotion detection for transcript
+  useEffect(() => {
+    if (!isRecording || transcript.length < 15) return
+    const timer = setTimeout(async () => {
+      const ed = await fetchEmotionData(transcript)
+      if (ed) setLiveEmotion(ed)
+    }, 1000) // Debounce 1s
+    return () => clearTimeout(timer)
+  }, [transcript, isRecording])
 
   const goNext = useCallback(() => {
     if (isLast) {
