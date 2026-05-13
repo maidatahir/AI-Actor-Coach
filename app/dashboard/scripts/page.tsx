@@ -8,35 +8,38 @@ import { preloadedScripts } from "@/lib/preloaded-scripts"
 export const dynamic = "force-dynamic"
 
 export default async function ScriptLibraryPage() {
-  console.log("ScriptLibraryPage [V4] starting")
+  console.log("ScriptLibraryPage optimized start")
+  
+  // Parallelize session fetching and DB connection
+  const [session, _] = await Promise.all([
+    getSession(),
+    dbConnect()
+  ])
+
   let userScripts: any[] = []
 
   try {
-    await dbConnect()
-    const session = await getSession()
-    console.log("ScriptLibrary DB connected, session:", !!session)
-
     if (session?.userId) {
-      const dbScripts = await Script.find({}).lean()
-      userScripts = JSON.parse(JSON.stringify(
-        dbScripts.map((s: any) => ({
-          id: s._id.toString(),
-          _id: s._id.toString(),
-          title: s.title ?? "Untitled",
-          author: s.author ?? "Unknown",
-          scenes: s.totalScenes ?? (Array.isArray(s.scenes) ? s.scenes.length : 0),
-          genre: s.genre ?? "Custom",
-          difficulty: s.difficulty ?? "Custom",
-          isUserUploaded: true,
-        }))
-      ))
+      // Use projection to fetch only needed fields
+      const dbScripts = await Script.find({}, 'title author totalScenes genre difficulty scenes')
+        .lean()
+        .exec()
+      
+      userScripts = dbScripts.map((s: any) => ({
+        id: s._id.toString(),
+        _id: s._id.toString(),
+        title: s.title ?? "Untitled",
+        author: s.author ?? "Unknown",
+        scenes: s.totalScenes ?? (Array.isArray(s.scenes) ? s.scenes.length : 0),
+        genre: s.genre ?? "Custom",
+        difficulty: s.difficulty ?? "Custom",
+        isUserUploaded: true,
+      }))
     }
   } catch (error) {
     console.error("Script library database error:", error)
-    // Page will still render with preloaded scripts
   }
 
-  // Preloaded library can be mocked here until standard libraries are seeded in DB
   const libraryScripts = preloadedScripts
 
   return (
