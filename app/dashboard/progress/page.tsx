@@ -55,7 +55,7 @@ const milestones = [
 
 export default function ProgressTrackerPage() {
   return (
-    <div className="space-y-8 animate-in fade-in duration-700">
+    <div className="space-y-8 pb-10">
       {/* Header */}
       <div className="relative overflow-hidden p-8 rounded-3xl bg-gradient-to-r from-purple-500/10 via-blue-500/10 to-transparent border border-white/5">
         <div className="relative z-10">
