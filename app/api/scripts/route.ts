@@ -1,4 +1,8 @@
+import { NextResponse } from "next/server"
+import dbConnect from "@/lib/mongodb"
+import Script from "@/models/Script"
 import { getSession } from "@/lib/session"
+import { parseRawScript } from "@/lib/parse-raw-script"
 
 export async function GET() {
   try {
@@ -8,22 +12,23 @@ export async function GET() {
     }
 
     await dbConnect()
-    const dbScripts = await Script.find({}, 'title author totalScenes genre difficulty scenes')
-      .lean()
-      .exec()
-    
-    const userScripts = dbScripts.map((s: any) => ({
-      id: s._id.toString(),
-      _id: s._id.toString(),
-      title: s.title ?? "Untitled",
-      author: s.author ?? "Unknown",
-      scenes: s.totalScenes ?? (Array.isArray(s.scenes) ? s.scenes.length : 0),
-      genre: s.genre ?? "Custom",
-      difficulty: s.difficulty ?? "Custom",
+    const docs = await Script.find(
+      {},
+      { title: 1, author: 1, genre: 1, difficulty: 1, totalScenes: 1 }
+    ).sort({ createdAt: -1 }).lean<any[]>()
+
+    const scripts = docs.map((s: any) => ({
+      id:            s._id.toString(),
+      _id:           s._id.toString(),
+      title:         s.title        ?? "Untitled",
+      author:        s.author       ?? "Unknown",
+      genre:         s.genre        ?? "Custom",
+      difficulty:    s.difficulty   ?? "Custom",
+      scenes:        s.totalScenes  ?? 0,
       isUserUploaded: true,
     }))
 
-    return NextResponse.json({ scripts: userScripts })
+    return NextResponse.json({ scripts })
   } catch (error) {
     console.error("Script fetch error:", error)
     return NextResponse.json({ error: "Failed to fetch scripts" }, { status: 500 })
@@ -38,60 +43,34 @@ export async function POST(req: Request) {
     }
 
     const { title, author, genre, rawText } = await req.json()
-
-    if (!title || !rawText) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
+    if (!title?.trim() || !rawText?.trim()) {
+      return NextResponse.json({ error: "Title and script text are required" }, { status: 400 })
     }
+
+    // Parse free-form text → structured scenes with typed elements
+    const parsedScenes = parseRawScript(rawText)
 
     await dbConnect()
 
-    // 1. Create the Script record in MongoDB
     const newScript = await Script.create({
-      title,
-      author: author || "Unknown",
-      // Note: If you want to store genre, you'll need to update models/Script.ts
-      // source: rawText (storing full raw is usually done in blob storage, but we can save it on the model)
-      source: rawText.substring(0, 500) + "..." // truncated for space in DB strings
+      title:       title.trim(),
+      author:      author?.trim() || "Unknown",
+      genre:       genre?.trim()  || "Custom",
+      difficulty:  "Custom",
+      totalScenes: parsedScenes.length,
+      scenes:      parsedScenes,
+      userId:      session.userId,
     })
 
-    // 2. We can optionally parse and save the Scene subdocuments:
-    const lines = rawText.split("\n").filter((l: string) => l.trim())
-    const sceneMarkerRegex = /^(SCENE|ACT|---|\*\*\*|===)/i
-    let sceneCount = 0
-    let currentLines: string[] = []
-    
-    // We will save each delimited section as a separate Scene model relation
-    for (const line of lines) {
-      if (sceneMarkerRegex.test(line.trim()) && currentLines.length > 0) {
-        sceneCount++
-        await Scene.create({
-          scriptId: newScript._id,
-          sceneNumber: sceneCount,
-        })
-        currentLines = [line.trim()]
-      } else {
-        currentLines.push(line.trim())
-      }
-    }
-
-    // Final scene
-    if (currentLines.length > 0) {
-      sceneCount++
-      await Scene.create({
-        scriptId: newScript._id,
-        sceneNumber: sceneCount,
-      })
-    }
-
-    // If no scenes detected, create at least 1 scene record for the full text
-    if (sceneCount === 0) {
-      await Scene.create({
-        scriptId: newScript._id,
-        sceneNumber: 1,
-      })
-    }
-
-    return NextResponse.json({ success: true, script: newScript })
+    return NextResponse.json({
+      success: true,
+      script: {
+        _id:         newScript._id.toString(),
+        id:          newScript._id.toString(),
+        title:       newScript.title,
+        totalScenes: parsedScenes.length,
+      },
+    })
   } catch (error) {
     console.error("Script upload error:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })

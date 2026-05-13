@@ -58,11 +58,12 @@ export default function UploadScriptModal({ onClose }: { onClose: () => void }) 
       })
 
       if (!response.ok) {
-        throw new Error('Upload failed')
+        const err = await response.json().catch(() => ({}))
+        throw new Error(err.error || 'Upload failed')
       }
 
-      // Refresh page to fetch new scripts via Server Component
-      window.location.reload()
+      // Switch to My Scripts tab after upload
+      globalThis.location.href = globalThis.location.pathname + '?tab=my-scripts'
       
     } catch (err: any) {
       setUploadError(err.message)

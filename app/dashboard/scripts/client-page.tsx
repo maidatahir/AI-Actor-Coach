@@ -18,7 +18,10 @@ export default function ScriptLibraryClient({ libraryScripts }: ScriptLibraryCli
   const [isUserScriptsLoading, setIsUserScriptsLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedGenre, setSelectedGenre] = useState<string | null>(null)
-  const [activeTab, setActiveTab] = useState<"library" | "my-scripts">("library")
+  const initialTab = globalThis.location !== undefined &&
+    new URLSearchParams(globalThis.location.search).get("tab") === "my-scripts"
+    ? "my-scripts" : "library"
+  const [activeTab, setActiveTab] = useState<"library" | "my-scripts">(initialTab)
   const [showUploadModal, setShowUploadModal] = useState(false)
 
   // Fetch user scripts from API on mount
