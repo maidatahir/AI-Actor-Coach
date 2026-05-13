@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { TrendingUp, Target, Smile, Mic, Calendar, Award } from "lucide-react"
+import { TrendingUp, Target, Smile, Mic, Calendar, Award, CheckCircle2, Clock } from "lucide-react"
 import {
   LineChart,
   Line,
@@ -45,125 +45,111 @@ const voiceProgress = [
 ]
 
 const milestones = [
-  { title: "First Practice Session", date: "Jan 15", achieved: true },
-  { title: "10 Sessions Completed", date: "Feb 8", achieved: true },
-  { title: "75% Average Score", date: "Mar 22", achieved: true },
-  { title: "25 Sessions Completed", date: "May 5", achieved: true },
-  { title: "80% Emotion Accuracy", date: "Jun 1", achieved: true },
-  { title: "50 Sessions Completed", date: "In Progress", achieved: false },
+  { title: "First Practice Session", date: "Jan 15", achieved: true, type: "milestone" },
+  { title: "10 Sessions Completed", date: "Feb 8", achieved: true, type: "milestone" },
+  { title: "75% Average Score", date: "Mar 22", achieved: true, type: "performance" },
+  { title: "25 Sessions Completed", date: "May 5", achieved: true, type: "milestone" },
+  { title: "80% Emotion Accuracy", date: "Jun 1", achieved: true, type: "performance" },
+  { title: "50 Sessions Completed", date: "In Progress", achieved: false, type: "milestone" },
 ]
 
 export default function ProgressTrackerPage() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 animate-in fade-in duration-700">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Progress Tracker</h1>
-        <p className="text-muted-foreground">Track your improvement over time</p>
+      <div className="relative overflow-hidden p-8 rounded-3xl bg-gradient-to-r from-purple-500/10 via-blue-500/10 to-transparent border border-white/5">
+        <div className="relative z-10">
+          <h1 className="text-3xl font-bold text-white mb-2 tracking-tight">Progress Tracker</h1>
+          <p className="text-white/60 text-lg">Visualize your journey to becoming a master actor</p>
+        </div>
+        <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/20 blur-[100px] -mr-32 -mt-32 rounded-full" />
       </div>
 
       {/* Stats Overview */}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-primary/10">
-                <TrendingUp className="w-5 h-5 text-primary" />
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[
+          { label: "Overall Progress", value: "+26%", icon: TrendingUp, color: "from-purple-500 to-blue-500", bg: "bg-purple-500/10" },
+          { label: "Current Average", value: "78%", icon: Target, color: "from-blue-500 to-cyan-500", bg: "bg-blue-500/10" },
+          { label: "Sessions Month", value: "12", icon: Calendar, color: "from-pink-500 to-purple-500", bg: "bg-pink-500/10" },
+          { label: "Milestones", value: "5", icon: Award, color: "from-amber-500 to-orange-500", bg: "bg-amber-500/10" },
+        ].map((stat, i) => (
+          <Card key={i} className="group overflow-hidden border-white/5 bg-white/[0.03] backdrop-blur-xl hover:bg-white/[0.06] transition-all duration-300">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className={`p-4 rounded-2xl ${stat.bg} group-hover:scale-110 transition-transform duration-300`}>
+                  <stat.icon className={`w-6 h-6 text-transparent bg-clip-text bg-gradient-to-br ${stat.color}`} />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-white/40 uppercase tracking-wider">{stat.label}</p>
+                  <p className="text-3xl font-bold text-white mt-0.5">{stat.value}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Overall Progress</p>
-                <p className="text-2xl font-bold text-foreground">+26%</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-accent/10">
-                <Target className="w-5 h-5 text-accent" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Current Average</p>
-                <p className="text-2xl font-bold text-foreground">78%</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-chart-3/10">
-                <Calendar className="w-5 h-5 text-chart-3" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Sessions This Month</p>
-                <p className="text-2xl font-bold text-foreground">12</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-chart-4/10">
-                <Award className="w-5 h-5 text-chart-4" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Milestones Achieved</p>
-                <p className="text-2xl font-bold text-foreground">5</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* Charts Grid */}
-      <div className="grid lg:grid-cols-2 gap-6">
+      <div className="grid lg:grid-cols-2 gap-8">
         {/* Weekly Performance Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-primary" />
-              Weekly Performance Score
-            </CardTitle>
-            <CardDescription>Your average performance score over the past 8 weeks</CardDescription>
+        <Card className="border-white/5 bg-white/[0.02] backdrop-blur-xl overflow-hidden">
+          <CardHeader className="border-b border-white/5 pb-8">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-xl flex items-center gap-2 text-white">
+                  <TrendingUp className="w-5 h-5 text-purple-400" />
+                  Weekly Performance
+                </CardTitle>
+                <CardDescription className="text-white/40 mt-1">Consistency and growth over 8 weeks</CardDescription>
+              </div>
+              <Badge variant="outline" className="bg-purple-500/10 text-purple-400 border-purple-500/20">
+                Live Data
+              </Badge>
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="h-64">
+          <CardContent className="pt-8">
+            <div className="h-72">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={weeklyPerformance}>
                   <defs>
                     <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                      <stop offset="5%" stopColor="#a855f7" stopOpacity={0.4} />
+                      <stop offset="95%" stopColor="#a855f7" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                   <XAxis 
                     dataKey="week" 
-                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-                    axisLine={{ stroke: 'hsl(var(--border))' }}
+                    tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 12 }}
+                    axisLine={false}
+                    tickLine={false}
+                    dy={10}
                   />
                   <YAxis 
-                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-                    axisLine={{ stroke: 'hsl(var(--border))' }}
+                    tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 12 }}
+                    axisLine={false}
+                    tickLine={false}
+                    dx={-10}
                     domain={[50, 100]}
                   />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px',
+                      backgroundColor: 'rgba(15, 15, 25, 0.95)',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      borderRadius: '16px',
+                      boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+                      backdropFilter: 'blur(10px)'
                     }}
-                    labelStyle={{ color: 'hsl(var(--foreground))' }}
+                    itemStyle={{ color: '#fff' }}
+                    labelStyle={{ color: 'rgba(255,255,255,0.6)', marginBottom: '4px' }}
                   />
                   <Area
                     type="monotone"
                     dataKey="score"
-                    stroke="hsl(var(--primary))"
-                    strokeWidth={2}
+                    stroke="#a855f7"
+                    strokeWidth={4}
                     fill="url(#colorScore)"
+                    animationDuration={2000}
                   />
                 </AreaChart>
               </ResponsiveContainer>
@@ -172,49 +158,62 @@ export default function ProgressTrackerPage() {
         </Card>
 
         {/* Emotion Recognition Progress */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Smile className="w-5 h-5 text-accent" />
-              Emotion Recognition Improvement
-            </CardTitle>
-            <CardDescription>Your emotion accuracy over the past 6 months</CardDescription>
+        <Card className="border-white/5 bg-white/[0.02] backdrop-blur-xl overflow-hidden">
+          <CardHeader className="border-b border-white/5 pb-8">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-xl flex items-center gap-2 text-white">
+                  <Smile className="w-5 h-5 text-blue-400" />
+                  Emotion Accuracy
+                </CardTitle>
+                <CardDescription className="text-white/40 mt-1">Accuracy in recognizing and portraying emotions</CardDescription>
+              </div>
+              <Badge variant="outline" className="bg-blue-500/10 text-blue-400 border-blue-500/20">
+                +12% Trend
+              </Badge>
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="h-64">
+          <CardContent className="pt-8">
+            <div className="h-72">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={emotionProgress}>
                   <defs>
                     <linearGradient id="colorEmotion" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(var(--accent))" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="hsl(var(--accent))" stopOpacity={0} />
+                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.4} />
+                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                   <XAxis 
                     dataKey="month" 
-                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-                    axisLine={{ stroke: 'hsl(var(--border))' }}
+                    tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 12 }}
+                    axisLine={false}
+                    tickLine={false}
+                    dy={10}
                   />
                   <YAxis 
-                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-                    axisLine={{ stroke: 'hsl(var(--border))' }}
+                    tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 12 }}
+                    axisLine={false}
+                    tickLine={false}
+                    dx={-10}
                     domain={[40, 100]}
                   />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px',
+                      backgroundColor: 'rgba(15, 15, 25, 0.95)',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      borderRadius: '16px',
+                      backdropFilter: 'blur(10px)'
                     }}
-                    labelStyle={{ color: 'hsl(var(--foreground))' }}
+                    itemStyle={{ color: '#fff' }}
                   />
                   <Area
                     type="monotone"
                     dataKey="accuracy"
-                    stroke="hsl(var(--accent))"
-                    strokeWidth={2}
+                    stroke="#3b82f6"
+                    strokeWidth={4}
                     fill="url(#colorEmotion)"
+                    animationDuration={2500}
                   />
                 </AreaChart>
               </ResponsiveContainer>
@@ -223,117 +222,124 @@ export default function ProgressTrackerPage() {
         </Card>
 
         {/* Voice Modulation Progress */}
-        <Card>
+        <Card className="border-white/5 bg-white/[0.02] backdrop-blur-xl">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Mic className="w-5 h-5 text-chart-3" />
-              Voice Modulation Progress
+            <CardTitle className="text-xl flex items-center gap-2 text-white">
+              <Mic className="w-5 h-5 text-cyan-400" />
+              Voice Modulation
             </CardTitle>
-            <CardDescription>Clarity, pitch stability, and tone match over time</CardDescription>
+            <CardDescription className="text-white/40">Clarity, pitch stability, and tone match</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-64">
+            <div className="h-72">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={voiceProgress}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                   <XAxis 
                     dataKey="month" 
-                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-                    axisLine={{ stroke: 'hsl(var(--border))' }}
+                    tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 12 }}
+                    axisLine={false}
+                    tickLine={false}
                   />
                   <YAxis 
-                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-                    axisLine={{ stroke: 'hsl(var(--border))' }}
+                    tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 12 }}
+                    axisLine={false}
+                    tickLine={false}
                     domain={[40, 100]}
                   />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px',
+                      backgroundColor: 'rgba(15, 15, 25, 0.95)',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      borderRadius: '16px',
                     }}
-                    labelStyle={{ color: 'hsl(var(--foreground))' }}
                   />
                   <Line
                     type="monotone"
                     dataKey="clarity"
-                    stroke="hsl(var(--chart-1))"
-                    strokeWidth={2}
-                    dot={{ fill: 'hsl(var(--chart-1))' }}
-                    name="Clarity"
+                    stroke="#22d3ee"
+                    strokeWidth={3}
+                    dot={{ fill: '#22d3ee', strokeWidth: 2, r: 4 }}
+                    activeDot={{ r: 6, strokeWidth: 0 }}
                   />
                   <Line
                     type="monotone"
                     dataKey="pitch"
-                    stroke="hsl(var(--chart-2))"
-                    strokeWidth={2}
-                    dot={{ fill: 'hsl(var(--chart-2))' }}
-                    name="Pitch"
+                    stroke="#818cf8"
+                    strokeWidth={3}
+                    dot={{ fill: '#818cf8', strokeWidth: 2, r: 4 }}
                   />
                   <Line
                     type="monotone"
                     dataKey="tone"
-                    stroke="hsl(var(--chart-3))"
-                    strokeWidth={2}
-                    dot={{ fill: 'hsl(var(--chart-3))' }}
-                    name="Tone"
+                    stroke="#c084fc"
+                    strokeWidth={3}
+                    dot={{ fill: '#c084fc', strokeWidth: 2, r: 4 }}
                   />
                 </LineChart>
               </ResponsiveContainer>
             </div>
-            <div className="flex justify-center gap-6 mt-4">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-chart-1" />
-                <span className="text-sm text-muted-foreground">Clarity</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-chart-2" />
-                <span className="text-sm text-muted-foreground">Pitch</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-chart-3" />
-                <span className="text-sm text-muted-foreground">Tone</span>
-              </div>
+            <div className="flex justify-center gap-8 mt-6">
+              {[
+                { label: 'Clarity', color: 'bg-cyan-400' },
+                { label: 'Pitch', color: 'bg-indigo-400' },
+                { label: 'Tone', color: 'bg-purple-400' },
+              ].map((item, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <div className={`w-3 h-3 rounded-full ${item.color} shadow-lg shadow-${item.color.split('-')[1]}-500/20`} />
+                  <span className="text-sm font-medium text-white/60">{item.label}</span>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
 
         {/* Milestones */}
-        <Card>
+        <Card className="border-white/5 bg-white/[0.02] backdrop-blur-xl">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Award className="w-5 h-5 text-chart-4" />
-              Milestones
+            <CardTitle className="text-xl flex items-center gap-2 text-white">
+              <Award className="w-5 h-5 text-amber-400" />
+              Recent Achievements
             </CardTitle>
-            <CardDescription>Your achievements and goals</CardDescription>
+            <CardDescription className="text-white/40">Tracking your major professional milestones</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {milestones.map((milestone, index) => (
                 <div
                   key={index}
-                  className={`flex items-center gap-4 p-3 rounded-xl ${
-                    milestone.achieved ? 'bg-green-500/10' : 'bg-muted/50'
+                  className={`flex items-center gap-4 p-4 rounded-2xl transition-all duration-300 border border-transparent hover:border-white/5 group ${
+                    milestone.achieved ? 'bg-white/[0.03]' : 'bg-transparent opacity-50'
                   }`}
                 >
                   <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                      milestone.achieved ? 'bg-green-500 text-white' : 'bg-muted text-muted-foreground'
+                    className={`w-12 h-12 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:rotate-12 ${
+                      milestone.achieved 
+                        ? milestone.type === 'milestone' 
+                          ? 'bg-purple-500/20 text-purple-400' 
+                          : 'bg-green-500/20 text-green-400'
+                        : 'bg-white/5 text-white/20'
                     }`}
                   >
                     {milestone.achieved ? (
-                      <Award className="w-5 h-5" />
+                      <CheckCircle2 className="w-6 h-6" />
                     ) : (
-                      <span className="text-sm font-medium">{index + 1}</span>
+                      <Clock className="w-6 h-6" />
                     )}
                   </div>
                   <div className="flex-1">
-                    <p className="font-medium text-foreground">{milestone.title}</p>
-                    <p className="text-sm text-muted-foreground">{milestone.date}</p>
+                    <p className="font-semibold text-white group-hover:text-purple-300 transition-colors">{milestone.title}</p>
+                    <p className="text-sm text-white/40 font-medium">{milestone.date}</p>
                   </div>
-                  {milestone.achieved && (
-                    <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20">
-                      Achieved
+                  {milestone.achieved ? (
+                    <div className="flex flex-col items-end gap-1">
+                      <Badge variant="outline" className="bg-purple-500/10 text-purple-400 border-purple-500/20 px-3 py-1">
+                        Completed
+                      </Badge>
+                    </div>
+                  ) : (
+                    <Badge variant="outline" className="bg-white/5 text-white/40 border-white/10 px-3 py-1">
+                      In Progress
                     </Badge>
                   )}
                 </div>
