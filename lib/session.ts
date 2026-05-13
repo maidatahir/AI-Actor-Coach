@@ -2,7 +2,10 @@
 import { jwtVerify, SignJWT } from "jose"
 import { cookies } from "next/headers"
 
-const secretKey = process.env.JWT_SECRET
+const secretKey = process.env.JWT_SECRET || "default-secret-key-change-me-in-production"
+if (!process.env.JWT_SECRET) {
+  console.warn("JWT_SECRET is not defined in environment variables. Using fallback key.")
+}
 const key = new TextEncoder().encode(secretKey)
 
 export async function encrypt(payload: any) {
