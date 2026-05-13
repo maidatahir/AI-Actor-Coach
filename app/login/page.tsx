@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -10,7 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Eye, EyeOff, Mail, Lock, User, ArrowLeft, AlertCircle } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 
-export default function LoginPage() {
+function LoginContent() {
   const searchParams = useSearchParams()
   const initialMode = searchParams.get("mode") === "signup" ? "signup" : "login"
   const [mode, setMode] = useState<"login" | "signup">(initialMode)
@@ -357,5 +357,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#0a0e1a] flex items-center justify-center text-white/50">Loading...</div>}>
+      <LoginContent />
+    </Suspense>
   )
 }
