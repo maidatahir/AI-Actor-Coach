@@ -7,7 +7,7 @@ python_backend/
 emotion_analyzer.py
 
 # Seed script — local use only
-scripts/
+/scripts/
 
 # Misc
 *.pyc
