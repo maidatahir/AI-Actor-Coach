@@ -153,16 +153,16 @@ function EmotionBreakdown({ data }: Readonly<{ data: EmotionData }>) {
         const bar   = EMOTION_BAR_CLS[emotion] ?? "bg-white/40"
         return (
           <div key={emotion} className="flex items-center gap-2">
-            <span className={`text-[10px] w-[4.5rem] text-right capitalize shrink-0 ${isDom ? "text-white font-bold" : "text-white/35"}`}>
+            <span className={`text-[10px] w-[4.5rem] text-right capitalize shrink-0 ${isDom ? "text-white font-bold" : "text-white/50"}`}>
               {emotion}
             </span>
             <div className="flex-1 h-1.5 rounded-full bg-white/5 overflow-hidden">
               <div
-                className={`h-full rounded-full transition-all duration-700 ${bar} ${isDom ? "opacity-90" : "opacity-30"}`}
-                style={{ width: `${pct}%` }}
+                className={`h-full rounded-full transition-all duration-700 ${bar} ${isDom ? "opacity-90" : "opacity-50"}`}
+                style={{ width: `${Math.max(pct, 1.5)}%` }}
               />
             </div>
-            <span className={`text-[10px] w-7 shrink-0 tabular-nums ${isDom ? "text-white font-bold" : "text-white/35"}`}>
+            <span className={`text-[10px] w-7 shrink-0 tabular-nums ${isDom ? "text-white font-bold" : "text-white/50"}`}>
               {pct}%
             </span>
             {isDom && <span className="text-[9px] text-green-400 shrink-0">✓</span>}
