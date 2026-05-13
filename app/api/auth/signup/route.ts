@@ -8,7 +8,7 @@ import { createSession } from "@/lib/session"
 export async function POST(req: Request) {
   try {
     const { name, email, password, role } = await req.json()
-    console.log("Signup attempt:", { name, email, role })
+    console.log("Signup attempt [V3]:", { name, email, role })
     if (!name || !email || !password || !role) {
       console.log("Signup validation failed:", { name, email, password: !!password, role })
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
