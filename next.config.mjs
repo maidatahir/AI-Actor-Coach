@@ -1,4 +1,5 @@
 /** @type {import('next').NextConfig} */
+// Forced trigger for fresh Vercel deployment
 const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
