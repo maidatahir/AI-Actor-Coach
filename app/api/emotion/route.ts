@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 
 const HF_MODEL = "j-hartmann/emotion-english-distilroberta-base"
-const HF_URL   = `https://api-inference.huggingface.co/models/${HF_MODEL}`
+const HF_URL   = `https://router.huggingface.co/hf-inference/models/${HF_MODEL}`
 const EMOTIONS = ["anger", "disgust", "fear", "joy", "neutral", "sadness", "surprise"]
 
 function neutralFallback() {
