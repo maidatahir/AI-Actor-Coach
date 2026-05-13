@@ -5,6 +5,7 @@ import { ArrowLeft, Play, Clock, Smile, BookOpen } from "lucide-react"
 import Link from "next/link"
 import dbConnect from "@/lib/mongodb"
 import Script from "@/models/Script"
+import LibraryScript from "@/models/LibraryScript"
 import { preloadedScripts } from "@/lib/preloaded-scripts"
 
 export const dynamic = "force-dynamic"
@@ -46,7 +47,7 @@ export default async function ScriptDetailPage({
     script = preloaded
     scenes = preloaded.sceneData ?? []
     totalScenes = scenes.length
-  } else if (id && id.length === 24) {
+  } else if (id?.length === 24) {
     await dbConnect()
     try {
       const dbScript = await Script.findById(id).lean<any>()
@@ -54,7 +55,6 @@ export default async function ScriptDetailPage({
         const embedded: any[] = Array.isArray(dbScript.scenes) ? dbScript.scenes : []
         totalScenes = dbScript.totalScenes ?? embedded.length
         hiddenCount = Math.max(0, embedded.length - SCENE_PREVIEW_LIMIT)
-
         script = {
           id: dbScript._id.toString(),
           title: dbScript.title ?? "Untitled",
@@ -63,8 +63,24 @@ export default async function ScriptDetailPage({
           difficulty: dbScript.difficulty ?? "Custom",
           isUserUploaded: true,
         }
-
         scenes = buildScenesFromEmbedded(embedded, totalScenes)
+      } else {
+        // Try library scripts
+        const libScript = await LibraryScript.findById(id).lean<any>()
+        if (libScript) {
+          const embedded: any[] = Array.isArray(libScript.scenes) ? libScript.scenes : []
+          totalScenes = libScript.totalScenes ?? embedded.length
+          hiddenCount = Math.max(0, embedded.length - SCENE_PREVIEW_LIMIT)
+          script = {
+            id:         libScript._id.toString(),
+            title:      libScript.title,
+            author:     "Film",
+            genre:      libScript.genre       ?? "Film",
+            difficulty: libScript.difficulty  ?? "Intermediate",
+            isLibrary:  true,
+          }
+          scenes = buildScenesFromEmbedded(embedded, totalScenes)
+        }
       }
     } catch {
       // invalid id — script stays null

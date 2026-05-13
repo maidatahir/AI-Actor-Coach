@@ -1,0 +1,16 @@
+# Dataset files — seeded into MongoDB before deploy, not needed at runtime
+Scene Selection/
+
+# Python microservices — not part of the Next.js deployment
+backend/
+python_backend/
+emotion_analyzer.py
+
+# Seed script — local use only
+scripts/
+
+# Misc
+*.pyc
+__pycache__/
+Project_Dataset/
+scripts_json/

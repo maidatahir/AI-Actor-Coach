@@ -3,7 +3,66 @@ import mongoose from "mongoose"
 import dbConnect from "@/lib/mongodb"
 import Script from "@/models/Script"
 import Scene from "@/models/Scene"
+import LibraryScript from "@/models/LibraryScript"
 import { getSession } from "@/lib/session"
+
+function parseElements(elements: any[]) {
+  const blocks: any[] = []
+  let currentSpeaker: string | null = null
+  let currentLines: string[] = []
+  const contextBuffer: string[] = []
+
+  function flushContext() {
+    if (contextBuffer.length > 0) {
+      blocks.push({ type: "context", text: contextBuffer.join(" ") })
+      contextBuffer.length = 0
+    }
+  }
+  function flushSpeech() {
+    if (currentSpeaker && currentLines.length > 0) {
+      blocks.push({ type: "speech", speaker: currentSpeaker, lines: [...currentLines] })
+    }
+    currentSpeaker = null
+    currentLines = []
+  }
+
+  for (const el of elements ?? []) {
+    const content = el.content?.trim()
+    if (!content) continue
+    if (el.type === "text") {
+      flushSpeech()
+      contextBuffer.push(content)
+    } else if (el.type === "speaker") {
+      flushSpeech()
+      flushContext()
+      currentSpeaker = content
+    } else if (el.type === "dialog") {
+      if (currentSpeaker) {
+        currentLines.push(content)
+      } else {
+        contextBuffer.push(content)
+      }
+    }
+  }
+  flushSpeech()
+  flushContext()
+  return blocks
+}
+
+function buildSceneData(embedded: any[], totalScenes: number) {
+  return embedded.map((s: any) => ({
+    number:      s.sceneNumber,
+    title:       s.sceneHeading || `Scene ${s.sceneNumber}`,
+    description: `Scene ${s.sceneNumber} of ${totalScenes}`,
+    emotion:     "To be determined",
+    duration:    `~${Math.max(1, Math.ceil((s.elements?.length ?? 0) / 10))} min`,
+    blocks:      parseElements(s.elements ?? []),
+    lines:       (s.elements ?? [])
+      .filter((el: any) => el.type === "dialog" && el.content?.trim())
+      .slice(0, 3)
+      .map((el: any) => el.content.trim()),
+  }))
+}
 
 export async function GET(_req: Request, { params }: { params: { id: string } }) {
   const { id } = params
@@ -12,91 +71,44 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
   }
   try {
     await dbConnect()
+    // Try user-uploaded scripts first
     const dbScript = await Script.findById(id).lean<any>()
-    if (!dbScript) return NextResponse.json({ error: "Not found" }, { status: 404 })
 
-    const dbScenes = await Scene.find({ scriptId: id }).sort({ sceneNumber: 1 }).lean<any[]>()
-    // Scripts store content as an embedded scenes array (Python backend format)
-    const embedded: any[] = Array.isArray(dbScript.scenes) ? dbScript.scenes : []
-    const totalScenes: number = dbScript.totalScenes ?? embedded.length
+    if (dbScript) {
+      const embedded: any[] = Array.isArray(dbScript.scenes) ? dbScript.scenes : []
+      const totalScenes: number = dbScript.totalScenes ?? embedded.length
+      const sceneData = embedded.length > 0
+        ? buildSceneData(embedded, totalScenes)
+        : [{ number: 1, title: dbScript.title ?? "Full Script", description: "No scene data available", emotion: "To be determined", duration: "Unknown", blocks: [], lines: [] }]
 
-    // Parse elements into context blocks and speech blocks
-    function parseElements(elements: any[]) {
-      const blocks: any[] = []
-      let currentSpeaker: string | null = null
-      let currentLines: string[] = []
-      const contextBuffer: string[] = []
-
-      function flushContext() {
-        if (contextBuffer.length > 0) {
-          blocks.push({ type: "context", text: contextBuffer.join(" ") })
-          contextBuffer.length = 0
-        }
-      }
-      function flushSpeech() {
-        if (currentSpeaker && currentLines.length > 0) {
-          blocks.push({ type: "speech", speaker: currentSpeaker, lines: [...currentLines] })
-        }
-        currentSpeaker = null
-        currentLines = []
-      }
-
-      for (const el of elements ?? []) {
-        const content = el.content?.trim()
-        if (!content) continue
-        if (el.type === "text") {
-          flushSpeech()
-          contextBuffer.push(content)
-        } else if (el.type === "speaker") {
-          flushSpeech()
-          flushContext()
-          currentSpeaker = content
-        } else if (el.type === "dialog") {
-          if (currentSpeaker) {
-            currentLines.push(content)
-          } else {
-            contextBuffer.push(content)
-          }
-        }
-      }
-      flushSpeech()
-      flushContext()
-      return blocks
+      return NextResponse.json({
+        id:           dbScript._id.toString(),
+        title:        dbScript.title ?? "Untitled",
+        author:       dbScript.author ?? "Unknown",
+        genre:        dbScript.genre ?? "Custom",
+        difficulty:   dbScript.difficulty ?? "Custom",
+        totalScenes,
+        isUserUploaded: true,
+        sceneData,
+      })
     }
 
-    const sceneData = embedded.length > 0
-      ? embedded.map((s: any) => ({
-          number: s.sceneNumber,
-          title: s.sceneHeading || `Scene ${s.sceneNumber}`,
-          description: `Scene ${s.sceneNumber} of ${totalScenes}`,
-          emotion: "To be determined",
-          duration: `~${Math.max(1, Math.ceil((s.elements?.length ?? 0) / 10))} min`,
-          blocks: parseElements(s.elements ?? []),
-          // keep lines for preview cards (first few dialog lines only)
-          lines: (s.elements ?? [])
-            .filter((el: any) => el.type === "dialog" && el.content?.trim())
-            .slice(0, 3)
-            .map((el: any) => el.content.trim()),
-        }))
-      : [{
-          number: 1,
-          title: dbScript.title ?? "Full Script",
-          description: "No scene data available",
-          emotion: "To be determined",
-          duration: "Unknown",
-          blocks: [] as any[],
-          lines: [] as string[],
-        }]
+    // Fall back to library scripts
+    const libScript = await LibraryScript.findById(id).lean<any>()
+    if (!libScript) return NextResponse.json({ error: "Not found" }, { status: 404 })
+
+    const libEmbedded: any[] = Array.isArray(libScript.scenes) ? libScript.scenes : []
+    const libTotalScenes: number = libScript.totalScenes ?? libEmbedded.length
 
     return NextResponse.json({
-      id: dbScript._id.toString(),
-      title: dbScript.title ?? "Untitled",
-      author: dbScript.author ?? "Unknown",
-      genre: dbScript.genre ?? "Custom",
-      difficulty: dbScript.difficulty ?? "Custom",
-      totalScenes,
-      isUserUploaded: true,
-      sceneData,
+      id:          libScript._id.toString(),
+      title:       libScript.title,
+      author:      "Film",
+      genre:       libScript.genre  ?? "Film",
+      difficulty:  libScript.difficulty ?? "Intermediate",
+      totalScenes: libTotalScenes,
+      isLibrary:   true,
+      sceneData:   buildSceneData(libEmbedded, libTotalScenes),
     })
   } catch (error) {
     console.error("Script fetch error:", error)

@@ -15,6 +15,7 @@ type SpeechBlock  = { type: "speech";  speaker: string; lines: string[] }
 type Block        = ContextBlock | SpeechBlock
 
 type EmotionData = { top: string; all: Record<string, number> }
+type LineEmotion = { top: string; all: Record<string, number> }
 
 type Phase = "start" | "running" | "complete"
 
@@ -240,9 +241,10 @@ function ContextBlockUI({ block, ttsPlaying, isLast, onNext }: Readonly<{
 
 // ─── Speech Block UI ──────────────────────────────────────────────────────────
 
-function SpeechBlockUI({ block, emotionData, isLast, isRecording, recorded, transcript, onStartRecording, onStopRecording, onNext }: Readonly<{
+function SpeechBlockUI({ block, emotionData, lineEmotionList, isLast, isRecording, recorded, transcript, onStartRecording, onStopRecording, onNext }: Readonly<{
   block:            SpeechBlock
   emotionData:      EmotionData | undefined
+  lineEmotionList:  (LineEmotion | null)[] | undefined
   isLast:           boolean
   isRecording:      boolean
   recorded:         boolean
@@ -286,15 +288,29 @@ function SpeechBlockUI({ block, emotionData, isLast, isRecording, recorded, tran
         </div>
       )}
 
-      {/* Lines to say */}
-      <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-2">
-        <p className="text-[10px] font-semibold uppercase tracking-widest text-white/30 mb-3">
+      {/* Lines to say — with per-line emotion chips */}
+      <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
+        <p className="text-[10px] font-semibold uppercase tracking-widest text-white/30 mb-1">
           <BookOpen className="w-3 h-3 inline mr-1" />
           Say these lines:
         </p>
-        {block.lines.map((line) => (
-          <p key={line.slice(0, 40)} className="text-white/85 leading-relaxed text-sm">{line}</p>
-        ))}
+        {block.lines.map((line, idx) => {
+          const lineEd      = lineEmotionList?.[idx]
+          const isLoading   = lineEmotionList !== undefined && lineEmotionList.length <= idx
+          return (
+            <div key={`${idx}-${line.slice(0, 20)}`} className="flex items-start gap-2">
+              <p className="text-white/85 leading-relaxed text-sm flex-1">{line}</p>
+              <div className="shrink-0 pt-0.5">
+                {isLoading && (
+                  <Badge className="bg-white/5 border-white/10 text-white/20 border text-[10px] px-1.5 h-5 gap-1 animate-pulse">
+                    <Loader2 className="w-2.5 h-2.5 animate-spin" />
+                  </Badge>
+                )}
+                {!isLoading && lineEd && <EmotionBadge emotion={lineEd.top} />}
+              </div>
+            </div>
+          )
+        })}
       </div>
 
       {/* Recording controls */}
@@ -510,9 +526,11 @@ export default function GuidedSession({
   const [isRecording, setIsRecording] = useState(false)
   const [transcript,  setTranscript]  = useState("")
   const [recorded,    setRecorded]    = useState(false)
-  const [emotions,    setEmotions]    = useState<Record<number, EmotionData>>({})
+  const [emotions,     setEmotions]     = useState<Record<number, EmotionData>>({})
+  const [lineEmotions, setLineEmotions] = useState<Record<number, (LineEmotion | null)[]>>({})
 
-  const recognitionRef = useRef<any>(null)
+  const recognitionRef        = useRef<any>(null)
+  const loadedLineBlocksRef   = useRef<Set<number>>(new Set())
   const currentBlock   = blocks[blockIndex]
   const isLast         = blockIndex === blocks.length - 1
 
@@ -531,6 +549,38 @@ export default function GuidedSession({
     loadEmotions().catch(() => {})
     return () => { cancelled = true }
   }, [blocks])
+
+  // Load per-line emotions for the active speech block when it becomes visible
+  useEffect(() => {
+    if (phase !== "running") return
+    const block = blocks[blockIndex]
+    if (block?.type !== "speech") return
+    if (loadedLineBlocksRef.current.has(blockIndex)) return
+
+    loadedLineBlocksRef.current.add(blockIndex)
+    let cancelled = false
+
+    async function loadLines() {
+      const speechBlock = blocks[blockIndex] as SpeechBlock
+      // Mark the slot so the UI shows loading chips immediately
+      setLineEmotions(prev => ({ ...prev, [blockIndex]: [] }))
+      const partial: (LineEmotion | null)[] = []
+      for (const line of speechBlock.lines) {
+        if (line.trim().length < 8) {
+          partial.push(null)
+        } else {
+          const ed = await fetchEmotionData(line)
+          if (cancelled) return
+          partial.push(ed ?? null)
+        }
+        // Update incrementally so chips appear one by one as each line is analysed
+        setLineEmotions(prev => ({ ...prev, [blockIndex]: [...partial] }))
+      }
+    }
+
+    loadLines().catch(() => {})
+    return () => { cancelled = true }
+  }, [blockIndex, phase, blocks])
 
   useEffect(() => {
     if (phase !== "running" || currentBlock?.type !== "context") return
@@ -601,6 +651,8 @@ export default function GuidedSession({
           setBlockIndex(0)
           setTranscript("")
           setRecorded(false)
+          setLineEmotions({})
+          loadedLineBlocksRef.current.clear()
         }}
       />
     )
@@ -623,6 +675,7 @@ export default function GuidedSession({
         <SpeechBlockUI
           block={currentBlock}
           emotionData={emotions[blockIndex]}
+          lineEmotionList={lineEmotions[blockIndex]}
           isLast={isLast}
           isRecording={isRecording}
           recorded={recorded}
