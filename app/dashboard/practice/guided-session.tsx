@@ -142,9 +142,8 @@ function DetectingBadge() {
 }
 
 function EmotionBreakdown({ data }: Readonly<{ data: EmotionData }>) {
-  const sorted = EMOTION_ORDER
-    .filter((e) => e in data.all)
-    .sort((a, b) => (data.all[b] ?? 0) - (data.all[a] ?? 0))
+  // Sort all emotions by their intensity, but always include all 7 categories
+  const sorted = [...EMOTION_ORDER].sort((a, b) => (data.all[b] ?? 0) - (data.all[a] ?? 0))
 
   return (
     <div className="space-y-2 py-1">
