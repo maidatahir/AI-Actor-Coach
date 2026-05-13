@@ -77,7 +77,7 @@ export default function ProgressTrackerPage() {
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
                 <div className={`p-4 rounded-2xl ${stat.bg} group-hover:scale-110 transition-transform duration-300`}>
-                  <stat.icon className={`w-6 h-6 text-transparent bg-clip-text bg-gradient-to-br ${stat.color}`} />
+                  <stat.icon className={`w-6 h-6 text-white`} />
                 </div>
                 <div>
                   <p className="text-sm font-medium text-white/40 uppercase tracking-wider">{stat.label}</p>

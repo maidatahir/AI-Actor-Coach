@@ -8,18 +8,20 @@ import { preloadedScripts } from "@/lib/preloaded-scripts"
 export const dynamic = "force-dynamic"
 
 export default async function ScriptLibraryPage() {
-  console.log("ScriptLibraryPage optimized start")
-  
-  // Parallelize session fetching and DB connection
-  const [session, _] = await Promise.all([
-    getSession(),
-    dbConnect()
-  ])
-
+  let session = null
   let userScripts: any[] = []
 
   try {
-    if (session?.userId) {
+    // Parallelize session fetching and DB connection with safety
+    const results = await Promise.allSettled([
+      getSession(),
+      dbConnect()
+    ])
+    
+    session = results[0].status === 'fulfilled' ? results[0].value : null
+    const dbConnected = results[1].status === 'fulfilled'
+
+    if (dbConnected && session?.userId) {
       // Use projection to fetch only needed fields
       const dbScripts = await Script.find({}, 'title author totalScenes genre difficulty scenes')
         .lean()
