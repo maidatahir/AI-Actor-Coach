@@ -1,24 +1,44 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Search, BookOpen, Play, User, Layers, Upload, Plus, FileText, Trash2 } from "lucide-react"
+import { Search, BookOpen, Play, User, Layers, Upload, Plus, FileText, Trash2, Loader2 } from "lucide-react"
 import Link from "next/link"
 import UploadScriptModal from "./upload-modal"
 
 // Props representing fetched data from the server
 interface ScriptLibraryClientProps {
   libraryScripts: any[]
-  userScripts: any[]
 }
 
-export default function ScriptLibraryClient({ libraryScripts, userScripts }: ScriptLibraryClientProps) {
+export default function ScriptLibraryClient({ libraryScripts }: ScriptLibraryClientProps) {
+  const [userScripts, setUserScripts] = useState<any[]>([])
+  const [isUserScriptsLoading, setIsUserScriptsLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedGenre, setSelectedGenre] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<"library" | "my-scripts">("library")
   const [showUploadModal, setShowUploadModal] = useState(false)
+
+  // Fetch user scripts from API on mount
+  useEffect(() => {
+    async function fetchUserScripts() {
+      setIsUserScriptsLoading(true)
+      try {
+        const res = await fetch('/api/scripts')
+        const data = await res.json()
+        if (data.scripts) {
+          setUserScripts(data.scripts)
+        }
+      } catch (err) {
+        console.error("Failed to fetch user scripts:", err)
+      } finally {
+        setIsUserScriptsLoading(false)
+      }
+    }
+    fetchUserScripts()
+  }, [])
 
   const displayScripts = activeTab === "library" ? libraryScripts : userScripts
   const genres = Array.from(new Set(displayScripts.map((s) => s.genre)))
@@ -125,8 +145,14 @@ export default function ScriptLibraryClient({ libraryScripts, userScripts }: Scr
       </div>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {filteredScripts.map((script) => (
-          <div key={script._id || script.id} className="group relative p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 hover:border-purple-500/30 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-purple-500/10">
+        {isUserScriptsLoading && activeTab === "my-scripts" ? (
+          <div className="col-span-full py-20 flex flex-col items-center justify-center text-white/40">
+            <Loader2 className="w-10 h-10 animate-spin mb-4 text-purple-500" />
+            <p>Loading your scripts...</p>
+          </div>
+        ) : (
+          filteredScripts.map((script) => (
+            <div key={script._id || script.id} className="group relative p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 hover:border-purple-500/30 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-purple-500/10">
             <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-purple-600/5 to-blue-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <div className="relative">
               <div className="flex items-start justify-between mb-4">
@@ -189,10 +215,11 @@ export default function ScriptLibraryClient({ libraryScripts, userScripts }: Scr
               </div>
             </div>
           </div>
-        ))}
+          ))
+        )}
       </div>
 
-      {filteredScripts.length === 0 && (
+      {filteredScripts.length === 0 && !isUserScriptsLoading && (
         <div className="text-center py-12">
           <BookOpen className="w-12 h-12 text-white/20 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-white mb-2">

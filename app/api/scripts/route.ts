@@ -1,8 +1,34 @@
-import { NextResponse } from "next/server"
-import dbConnect from "@/lib/mongodb"
-import Script from "@/models/Script"
-import Scene from "@/models/Scene"
 import { getSession } from "@/lib/session"
+
+export async function GET() {
+  try {
+    const session = await getSession()
+    if (!session?.userId) {
+      return NextResponse.json({ scripts: [] })
+    }
+
+    await dbConnect()
+    const dbScripts = await Script.find({}, 'title author totalScenes genre difficulty scenes')
+      .lean()
+      .exec()
+    
+    const userScripts = dbScripts.map((s: any) => ({
+      id: s._id.toString(),
+      _id: s._id.toString(),
+      title: s.title ?? "Untitled",
+      author: s.author ?? "Unknown",
+      scenes: s.totalScenes ?? (Array.isArray(s.scenes) ? s.scenes.length : 0),
+      genre: s.genre ?? "Custom",
+      difficulty: s.difficulty ?? "Custom",
+      isUserUploaded: true,
+    }))
+
+    return NextResponse.json({ scripts: userScripts })
+  } catch (error) {
+    console.error("Script fetch error:", error)
+    return NextResponse.json({ error: "Failed to fetch scripts" }, { status: 500 })
+  }
+}
 
 export async function POST(req: Request) {
   try {
