@@ -1,8 +1,8 @@
+import 'server-only'
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ArrowLeft, Play, Clock, Smile, BookOpen } from "lucide-react"
 import Link from "next/link"
-import mongoose from "mongoose"
 import dbConnect from "@/lib/mongodb"
 import Script from "@/models/Script"
 import { preloadedScripts } from "@/lib/preloaded-scripts"
@@ -46,7 +46,7 @@ export default async function ScriptDetailPage({
     script = preloaded
     scenes = preloaded.sceneData ?? []
     totalScenes = scenes.length
-  } else if (mongoose.Types.ObjectId.isValid(id)) {
+  } else if (id && id.length === 24) {
     await dbConnect()
     try {
       const dbScript = await Script.findById(id).lean<any>()
